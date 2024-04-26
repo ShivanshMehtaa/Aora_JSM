@@ -5,19 +5,36 @@ import { Image } from 'react-native'
 import {images } from "../../constants"
 import FormField from '../../components/FormField'
 import CustomButton from '../../components/CustomButton'
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { createUser } from '../../lib/appwrite'
+import { useGlobalContext } from '../../context/GlobalProvider'
 
 const SignUp = () => {
+  const { setUser, setIsLogged } = useGlobalContext();
   const [form, setForm] = useState({
+    username:'',
     email:'',
     password:'',
   })
 
   const[isSubmitting, setIsSubmitting] = useState(false);
 
-  const submit = () => {
-    createUser();
+  const submit = async () => {
+    if(!form.email || !form.password || !form.username){
+      Alert.alert('Error', 'Please fill all fields')
+    }
+    setIsSubmitting(true);
+    try{
+      const result = await createUser(form.email, form.password, form.username);
+      setUser(result);
+      setIsLogged(true);
+      router.push('/home')
+    }catch(error){
+      Alert.alert('Error', error.message)
+    }
+    finally{
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -32,8 +49,8 @@ const SignUp = () => {
           <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">Sign up to Aora</Text>
           <FormField
             title="Username"
-            value={form.email}
-            handleChangeText={(text) => setForm({...form, email: text})}
+            value={form.username}
+            handleChangeText={(text) => setForm({...form, username: text})}
             otherStyles="mt-6"
             placeholder="Enter Username"
           />
